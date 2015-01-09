@@ -149,7 +149,7 @@ class CsvFile extends \SplFileInfo implements \Iterator
 	public function validateLineBreak()
 	{
 		$lineBreak = $this->getLineBreak();
-		if (in_array($lineBreak, array("\r\n", "\n"))) {
+		if (in_array($lineBreak, array("\r\n", "\n", "\r"))) {
 			return $lineBreak;
 		}
 
