@@ -21,7 +21,6 @@ class CsvFile extends \SplFileInfo implements \Iterator
 	protected $_filePointer;
 	protected $_rowCounter = 0;
 	protected $_currentRow;
-	protected $_lineBreak;
 
 	public function __construct($fileName, $delimiter = self::DEFAULT_DELIMITER, $enclosure = self::DEFAULT_ENCLOSURE, $escapedBy = "")
 	{
@@ -133,58 +132,6 @@ class CsvFile extends \SplFileInfo implements \Iterator
 		return implode($this->getDelimiter(), $return) . "\n";
 	}
 
-	public function getLineBreak()
-	{
-		if (!$this->_lineBreak) {
-			$this->_lineBreak = $this->_detectLineBreak();
-		}
-		return $this->_lineBreak;
-	}
-
-	public function getLineBreakAsText()
-	{
-		return trim(json_encode($this->getLineBreak()), '"');
-	}
-
-	public function validateLineBreak()
-	{
-		$lineBreak = $this->getLineBreak();
-		if (in_array($lineBreak, array("\r\n", "\n", "\r"))) {
-			return $lineBreak;
-		}
-
-		throw new InvalidArgumentException("Invalid line break. Please use unix \\n or win \\r\\n line breaks.",
-			Exception::INVALID_PARAM, NULL, 'invalidParam');
-	}
-
-	protected  function _detectLineBreak()
-	{
-		rewind($this->_getFilePointer());
-		$sample = fread($this->_getFilePointer(), 10000);
-		rewind($this->_getFilePointer());
-
-		$possibleLineBreaks = array(
-			"\r\n", // win
-			"\r", // mac
-			"\n", // unix
-		);
-
-		$lineBreaksPositions = array();
-		foreach($possibleLineBreaks as $lineBreak) {
-			$position = strpos($sample, $lineBreak);
-			if ($position === false) {
-				continue;
-			}
-			$lineBreaksPositions[$lineBreak] = $position;
-		}
-
-
-		asort($lineBreaksPositions);
-		reset($lineBreaksPositions);
-
-		return empty($lineBreaksPositions) ? "\n" : key($lineBreaksPositions);
-	}
-
 	protected function _closeFile()
 	{
 		if (is_resource($this->_filePointer)) {
@@ -259,8 +206,6 @@ class CsvFile extends \SplFileInfo implements \Iterator
 
 	protected function _readLine()
 	{
-		$this->validateLineBreak();
-
 		// allow empty enclosure hack
 		$enclosure = !$this->getEnclosure() ? chr(0) : $this->getEnclosure();
 		$escapedBy = !$this->_escapedBy ? chr(0) : $this->_escapedBy;
